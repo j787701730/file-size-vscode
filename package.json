@@ -2,11 +2,16 @@
   "name": "file-size-vscode",
   "displayName": "file size vscode",
   "description": "文件大小显示",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "ZhengWei513",
   "author": {
     "name": "ZhengWei513"
   },
+  "keywords": [
+    "file size",
+    "file size vscode",
+    "file message"
+  ],
   "engines": {
     "vscode": "^1.77.0"
   },
@@ -17,7 +22,32 @@
     "onStartupFinished"
   ],
   "main": "./dist/extension.js",
-  "contributes": {},
+  "contributes": {
+    "commands": [],
+    "configuration": {
+      "title": "file size vscode",
+      "properties": {
+        "fileSizeVscode.alignment": {
+          "type": "string",
+          "enum": [
+            "left",
+            "right"
+          ],
+          "enumDescriptions": [
+            "状态栏左侧",
+            "状态栏右侧"
+          ],
+          "default": "right",
+          "description": "在状态栏显示位置"
+        },
+        "fileSizeVscode.priority": {
+          "type": "number",
+          "description": "在状态栏显示位置优先级(数值越大越靠右/左)",
+          "default": 0
+        }
+      }
+    }
+  },
   "icon": "./images/icon.png",
   "license": "MIT",
   "repository": {
