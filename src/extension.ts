@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import * as vscode from 'vscode';
 
 let statusBarItem: vscode.StatusBarItem;
@@ -48,12 +48,12 @@ const createStatusBarItem = () => {
 
 const setTooltip = (data?: ITooltipData) => {
   if (!statusBarItem) {
-    const config = getConfig(vscode.window.activeTextEditor!.document);
+    const config = getConfig(vscode.window.activeTextEditor?.document);
     Object.assign(defaultConfig, config);
     createStatusBarItem();
   }
 
-  const config = getConfig(vscode.window.activeTextEditor!.document);
+  const config = getConfig(vscode.window.activeTextEditor?.document);
 
   if (config.alignment !== defaultConfig.alignment || config.priority !== defaultConfig.priority) {
     Object.assign(defaultConfig, config);
@@ -99,29 +99,53 @@ const floor = (num: number) => {
   return Math.floor(num * 100) / 100;
 };
 
+const getCurrentUri = () => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (activeEditor) {
+    return activeEditor.document.uri;
+  }
+  // 2. activeTextEditor为空：图片/webview/媒体预览，遍历tab
+  const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
+  const activeTab = allTabs.find((t) => t.isActive);
+  if (!activeTab) {
+    return null;
+  }
+
+  // 文本diff
+  if (activeTab.input instanceof vscode.TabInputTextDiff) {
+    return activeTab.input.original;
+  }
+
+  // 图片/自定义预览编辑器
+  if (activeTab.input instanceof vscode.TabInputCustom) {
+    return activeTab.input.uri;
+  }
+
+  // 普通文本tab（兜底）
+  if (activeTab.input instanceof vscode.TabInputText) {
+    return activeTab.input.uri;
+  }
+
+  return null;
+};
+
 /**
  * 获取当前激活文件的大小（单位：字节，可选转换为KB/MB）
  */
 async function getCurrentFileSize(): Promise<{ size: number; sizeFormatted: string } | null> {
-  // 1. 获取当前激活的文本编辑器
-  const activeEditor = vscode.window.activeTextEditor;
-  if (!activeEditor) {
-    // vscode.window.showErrorMessage('没有激活的编辑文件！');
-    return null;
-  }
-
-  const fileUri = activeEditor.document.uri;
-  // 排除非文件类型（如虚拟文档、输入框等）
-  if (fileUri.scheme !== 'file') {
-    // vscode.window.showErrorMessage('当前激活的不是本地文件！');
+  const fileUri = getCurrentUri();
+  // console.log('fileUri', fileUri);
+  if (!fileUri) {
     return null;
   }
 
   try {
     // 2. 使用VS Code内置workspace.fs获取文件统计信息（包含大小）
     const fileStat = await vscode.workspace.fs.stat(fileUri);
+    const buffer = await vscode.workspace.fs.readFile(fileUri);
     // 3. 格式化文件大小（字节 -> KB/MB，方便阅读）
-    const sizeInBytes = fileStat.size;
+    // const sizeInBytes = fileStat.size;
+    const sizeInBytes = buffer.length;
     let sizeFormatted = '';
     if (sizeInBytes < 1024) {
       sizeFormatted = `${sizeInBytes} B`;
@@ -138,8 +162,8 @@ async function getCurrentFileSize(): Promise<{ size: number; sizeFormatted: stri
       name: pa.name,
       ext: pa.ext,
       url: fileUri,
-      c_date: dateFormat(fileStat.ctime),
-      m_date: dateFormat(fileStat.mtime),
+      c_date: dateFormat(fileStat?.ctime),
+      m_date: dateFormat(fileStat?.mtime),
     });
     // 4. 返回原始大小和格式化后的大小
     return {
@@ -147,6 +171,7 @@ async function getCurrentFileSize(): Promise<{ size: number; sizeFormatted: stri
       sizeFormatted: sizeFormatted,
     };
   } catch (error) {
+    console.error(error);
     // vscode.window.showErrorMessage(`获取文件大小失败：${(error as Error).message}`);
     return null;
   }
@@ -155,12 +180,15 @@ async function getCurrentFileSize(): Promise<{ size: number; sizeFormatted: stri
 /**
  * 获取当前文档的配置项
  */
-const getConfig = (document: vscode.TextDocument) => {
-  const config = vscode.workspace.getConfiguration('fileSizeVscode', document.uri);
-  return {
-    alignment: config.get<string>('alignment', 'right'),
-    priority: config.get<number>('priority', 0),
-  };
+const getConfig = (document?: vscode.TextDocument) => {
+  if (document) {
+    const config = vscode.workspace.getConfiguration('fileSizeVscode', document.uri);
+    return {
+      alignment: config.get<string>('alignment', 'right'),
+      priority: config.get<number>('priority', 0),
+    };
+  }
+  return {};
 };
 
 // 插件激活时注册命令，用于测试

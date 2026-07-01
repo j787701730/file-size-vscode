@@ -2,7 +2,7 @@
   "name": "file-size-vscode",
   "displayName": "file size vscode",
   "description": "文件大小显示",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "ZhengWei513",
   "author": {
     "name": "ZhengWei513"
@@ -68,16 +68,15 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.77.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "22.x",
-    "typescript-eslint": "^8.48.1",
-    "eslint": "^9.39.1",
+    "@types/node": "^22.20.0",
+    "@types/vscode": "^1.77.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
     "esbuild": "^0.27.1",
+    "eslint": "^9.39.1",
     "npm-run-all": "^4.1.5",
     "typescript": "^5.9.3",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "typescript-eslint": "^8.48.1"
   }
 }
-
