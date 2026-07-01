@@ -2,7 +2,7 @@
   "name": "file-size-vscode",
   "displayName": "file size vscode",
   "description": "文件大小显示",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publisher": "ZhengWei513",
   "author": {
     "name": "ZhengWei513"

@@ -48,12 +48,12 @@ const createStatusBarItem = () => {
 
 const setTooltip = (data?: ITooltipData) => {
   if (!statusBarItem) {
-    const config = getConfig(vscode.window.activeTextEditor?.document);
+    const config = getConfig();
     Object.assign(defaultConfig, config);
     createStatusBarItem();
   }
 
-  const config = getConfig(vscode.window.activeTextEditor?.document);
+  const config = getConfig();
 
   if (config.alignment !== defaultConfig.alignment || config.priority !== defaultConfig.priority) {
     Object.assign(defaultConfig, config);
@@ -180,15 +180,12 @@ async function getCurrentFileSize(): Promise<{ size: number; sizeFormatted: stri
 /**
  * 获取当前文档的配置项
  */
-const getConfig = (document?: vscode.TextDocument) => {
-  if (document) {
-    const config = vscode.workspace.getConfiguration('fileSizeVscode', document.uri);
-    return {
-      alignment: config.get<string>('alignment', 'right'),
-      priority: config.get<number>('priority', 0),
-    };
-  }
-  return {};
+const getConfig = () => {
+  const config = vscode.workspace.getConfiguration('fileSizeVscode');
+  return {
+    alignment: config.get<string>('alignment', 'right'),
+    priority: config.get<number>('priority', 0),
+  };
 };
 
 // 插件激活时注册命令，用于测试
@@ -235,6 +232,13 @@ export function activate(context: vscode.ExtensionContext) {
     getCurrentFileSize();
   });
 
+  // 监听 Tab 切换/改变事件
+  const tabGroups = vscode.window.tabGroups.onDidChangeTabs((e) => {
+    if (e.changed.length > 0) {
+      getCurrentFileSize();
+    }
+  });
+
   context.subscriptions.push(
     open,
     copy,
@@ -242,6 +246,7 @@ export function activate(context: vscode.ExtensionContext) {
     onDidOpenTextDocumentDisposable,
     onDidChangeActiveTextEditorDisposable,
     onDidSaveTextDocumentDisposable,
+    tabGroups,
   );
 }
 
